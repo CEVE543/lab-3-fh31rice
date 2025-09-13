@@ -45,26 +45,7 @@ code-line-numbers: false
 code-block-font-size: "0.85em"
 ---
 
-## Do Before Lab {.unnumbered}
 
-1. **Accept the assignment.** Use the GitHub Classroom link posted on Canvas to "accept" the assignment, which will give you your own GitHub repository.
-1. **Clone your repository** to your computer using GitHub Desktop or the command line.
-1. **Open the repository in VS Code** directly from VS Code, GitHub Desktop, or your command line.
-1. **Activate the Julia environment.** In VS Code, open the command palette (View → Command Palette) and type "Julia: Start REPL". Alternatively, run `julia --project=.` in the terminal, then run `using Pkg; Pkg.instantiate()` to install required packages. The easiest method is to type `]` in the REPL to enter package mode, then type `instantiate`.
-1. **Verify rendering works.** Run `quarto render index.qmd` in your terminal - it should create both PDF and HTML documents.
-
-## Do During Lab {.unnumbered}
-
-This lab guides you through comparing Bayesian and traditional approaches to GEV parameter estimation:
-
-1. **Choose and analyze a station** with adequate data for GEV fitting
-1. **Compare fitting methods** using both Extremes.jl and Turing.jl 
-1. **Analyze multiple stations** by incorporating nearby stations into your analysis
-1. **Explore uncertainty** through a synthetic data experiment
-
-As with previous labs, you do not need to write code from scratch -- just modify and run provided code.
-
-To submit your work, push your changes to GitHub, render to PDF, and upload the PDF to Canvas.
 
 ## Your Analysis {.unnumbered}
 
@@ -75,19 +56,58 @@ Delete this entire section (including the "Do Before Lab" and "Do During Lab" se
 
 **Response 1:** Station Selection Rationale  
 *Replace this text with 2-3 sentences explaining why you chose your particular station for GEV analysis. Address factors like data length, location relevance, and data quality.*
-
+Ans:
+I choose station id 112, which is Austin station, when we look through the station data with highest number of years with available rainfall data, Austin is the number one with 169 years of data. So more years of available data is always preferred for GEV distribution. When we plot the max 24 hour rainfall data with year, we see that there are some extreme peaks, and also data in between 1960-1985 are missing.
 **Response 2:** Fitting Methods Comparison  
 *Replace this text with 3-4 sentences comparing the Extremes.jl and Turing.jl approaches. Discuss parameter differences, return level estimates, and potential reasons for any discrepancies.*
+Ans:
+Here, we plotted three different approach data, Extreme MLE, extreme PWM, Turing_MLE.
+
+The extreme MLE basically gives us the highest prtobability of observing our data given a set of parameters, the value of RL with RP is highest for this approach, it also fits the data very closely with the observed data, with the increase in return period, we have higher return level, which this method can't capture well.
+
+The PWM approach almost gives a echo level data compared to MLE, which is interesting. It slightly varies from MLE (only just in range of 0.01 to 0.10). Based on the chosen station, it can go over or under the MLE dist. But similar to MLE, it can't capture well the return level with increased return period.
+
+Turing MLE(bayesian) follows similar value and pattern to the MLE dist because, although we are calling it bayesian and given a range of parameter range, but in the code we implemented the package MLE, that's why it gave the same values like MLE.
+
+In the three approaches, one thing is common, no method can capture the higher return period return level. Because, it is not that cvommon to observe many records that have 100 or 250 year return period.
 
 **Response 3:** Multi-Station Geographic Analysis  
 *Replace this text with 4-5 sentences analyzing the spatial patterns in your multi-station comparison. Address the credibility of similarities/differences and explain how geographic factors might influence extreme precipitation patterns.*
+Ans:
+Here, the station with the lowest number of record(31), is produning a heavy unbounded tail, it can be due to have more extreme events within a short period of time.
 
+The station with a longer data record(80 years), producing a tail more bounded with polynomial increase, that means although it has a longer record of years of data, the extreme event is less and it is not shifting the tail much.
+
+That means shorter records can sometimes over amplify any rare event, but longer record can have light bounded tail,
+
+location effects: If a station is located near coast, it can face more frequent extreme rainfall event within shorter year record,(say 5 extreme rainfall record within 10 year record), but in inland or urban areas those stations may not record these extreme events within 10 years.
 **Response 4:** Uncertainty and Sample Size Insights  
 *Replace this text with 3-4 sentences interpreting your synthetic experiment results. Discuss adequate sample sizes for reliable GEV estimation and implications for infrastructure design.*
+Ans:
+Ans:
+Let me first, what we are doing here:
+We have true location, scale and shape parameter, say for n=30 years, code will calculate the XT(return level) from GEV  quantile formula, we have already parameters defines, so rand function will generate p from 0 to 1, and calculate XT each time. so say first iteration, one random p and one Xt is determined, second iteration will go like this till 30 times.
+After 30 times, we will have one set of extreme rainfall (XT).
+We need to do again this for set2 with another 30 years of calculated extreme rainfall (XT).
 
+So, this will go for 500 times. At last we will have 500 sets of data, where each set has 30 max rainfall(XT). now here, fit the MLE, to calculate the best possible combo of location,scale, and shape parameter. So in each set, using the 30 years data, we will have one set of location, scale, and shape parameter. Then using those set, calculate the 100 year return level for 100 year return period using quantile formula of GEV frome each set. So from 500 sets, we will have 500 Return level for 100 year return period. Then in x axis plot the RL, and y axis count the bin. Say, how many values of those 500 return level fall between 5-6 inch, 6-7 inch, 7-8 inch etc. That is the y axis of the histogram bin.
+
+similar scenario, will be done for 50 years, and 100 years case.(50 years mean, each set will have 50 XT value).
+
+Now for uncertainty,calculate not only 100 year value, but also 5,10,25,50,250 year value of XT. That means 500 return level for 5 year RP, 500 return level for 10 year RP etc...
+
+Then the bold solid line is the true line with the true location,scale and shape parameter already defined in the code.
+
+Now, here in the graph, we see that, the range of bounds upper and lower of the solid line is more in the N=30 years plot, but less for 100 year plot. It is because, when in a set, we will have 100 year of data in single set, the return level will be centered closely to the true value(bold solid line). But for less N, the estimate will be uncertain, that;s the the N=30 year graph has more spreader blue line across solid true line. So I will prefer to have 100 years of data in a single set.
+
+We are doing a synthetic experiment here with true location, scale and shape parameter. This is a stationary approach with no climate change considered, no data error considered. But real world data will be more uncertain and non stationary with measurement error, climate change effect, and this will make the data bound(the curve plots in the lower three graphs) around solid line more wider.
 **Response 5:** Final Synthesis  
 *Replace this text with 2-3 sentences synthesizing your key findings and their broader implications for climate risk assessment and engineering applications.*
-
+Ans:
+My key takeaways are:
+1. Longer level of data record, can dominate and change the uncertainty behaviour.
+2. It is important, where the gauge station is located, station enar coastline can face more frequent extreme rainfall withinh shorter period of time and can make the distribution tail more unbounded.
+3. For infrastructure design and climate risk decision making, I will not only do stationarity in uncertainty test, rather we have to consider the non stationarity with climate change.
 ## Data Setup and Station Selection
 
 ### Loading Required Packages
@@ -162,7 +182,7 @@ end
 
 ```{julia}
 # REQUIRED: You MUST choose a different station than the default
-my_stnid = 111
+my_stnid = 112
 
 my_station = @chain stations begin
 	@filter(stnid == !!my_stnid)
@@ -185,7 +205,7 @@ println("Years of data: $(my_station.years_of_data)")
 ::: {.callout-note}
 ## Response 1
 Explain why you chose this particular station and what makes it suitable for GEV analysis. Consider factors like data length, geographic location, and data completeness.
-:::
+::: 
 
 Let's visualize your chosen station's rainfall time series:
 
@@ -571,7 +591,8 @@ plot_multi_station_comparison(station_fits, station_info)
 ::: {.callout-note}
 ## Response 3
 Analyze the spatial patterns in your multi-station comparison. Address whether the station similarities or differences are credible, what this reveals about spatial variability in extreme precipitation, and how geographical factors (elevation, proximity to coast, urban effects, etc.) might explain the patterns you observe.
-:::
+::: 
+
 
 ## Uncertainty Analysis: Synthetic Experiment
 
@@ -764,8 +785,10 @@ How does this synthetic experiment inform your interpretation of the real statio
 Is the uncertainty observed in this experiment an upper or a lower bound for the uncertainty in real-world applications, and why?
 :::
 
+
 ::: {.callout-note}
 ## Response 5
 Synthesize your key findings from all analyses and discuss the broader implications for infrastructure design and climate risk assessment.
-:::
+::: 
+
 
